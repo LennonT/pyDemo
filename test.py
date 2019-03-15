@@ -2,57 +2,7 @@ from PIL import Image
 import random
 import os
 from collections import deque
-
-
-class Search:
-    def __init__(self):
-        pass
-
-
-class Node:
-    def __init__(self, parents, children, weight):
-        self.parents = parents
-        self.children = children
-        self.weight = weight
-
-
-class Thing:
-    def __init__(self, name, weight, value):
-        self.name = name
-        self.weight = weight
-        self.value = value
-
-
-class SaveAdapter:
-    def __init__(self, value, lst):
-        self.value = value
-        self.lst = lst
-
-    def print(self, pre='', end=''):
-        print(pre, end='')
-
-        print("value: " + str(self.value) + " ", end='')
-        print("list: { ", end='')
-        try:
-            for i, item in enumerate(self.lst):
-                print(
-                    "\"" + item + "\"",
-                    end='')
-                if i < len(self.lst) - 1:
-                    print(", ", end='')
-            print(" }")
-        except TypeError:
-            pass
-
-        print(end, end='')
-
-    def append(self, value, sublist):
-        self.value += value
-        self.lst += sublist
-
-    def copy(self):
-        new_instance = SaveAdapter(self.value, self.lst.copy())
-        return new_instance
+from ToyClasses import Search, Node, Thing, SaveAdapter, Place
 
 
 def test():
@@ -334,23 +284,17 @@ def tanxin():
 
 
 # 动态规划处理背包问题
-def dynamtic_plan():
-    all_things = [
-        Thing("A", 1, 1500),
-        Thing("B", 3, 2000),
-        Thing("C", 4, 3000),
-        Thing("D", 1, 2500),
-        Thing("E", 1, 1000)
-    ]
+def dynamic_plan(all_items, max_capacity, granularity=1):
+    max_steps = int(max_capacity / granularity)  # 获取步数
 
-    bag_capacity = 5  # 背包最多装多少
-    plan_table = [[0 for i in range(bag_capacity)] for j in range(len(all_things))]
+    plan_table = [[0 for i in range(max_steps)] for j in range(len(all_items))]
 
-    for i in range(len(all_things)):  # i表示哪个物品
-        for j in range(bag_capacity):  # j+1表示背包容量
+    for i in range(len(all_items)):  # i表示哪个物品
+        for j in range(max_steps):
+            cur_bag_capacity = (j + 1) * granularity  # 表示背包容量
             if i == 0:  # 第一行 直接放进去
-                if all_things[0].weight <= j + 1:  # 只放当前物品 可以放入背包
-                    plan_table[0][j] = SaveAdapter(all_things[0].value, [all_things[0].name])
+                if all_items[0].get_weight() <= cur_bag_capacity:  # 只放当前物品 可以放入背包
+                    plan_table[0][j] = SaveAdapter(all_items[0].get_value(), [all_items[0]])
                 else:
                     plan_table[0][j] = SaveAdapter(0, [])  # 第一个就放不进去 直接赋空
             else:  # 其他行 用当前物品做叠加
@@ -358,31 +302,24 @@ def dynamtic_plan():
 
                 new_max_value = 0
                 last_lst = []
-                if all_things[i].weight <= j + 1:  # 只放当前物品
-                    new_max_value = all_things[i].value
+                if all_items[i].get_weight() <= cur_bag_capacity:  # 只放当前物品
+                    new_max_value = all_items[i].get_value()
 
-                if j + 1 - all_things[i].weight > 0:  # 放完当前行的物品后还有空间
-                    last_table = plan_table[i - 1][j - all_things[i].weight]  # 直接查阅已算完部分，获取其最大价值
+                if cur_bag_capacity - all_items[i].get_weight() > 0:  # 放完当前行的物品后还有空间
+                    last_table = plan_table[i - 1][
+                        int((cur_bag_capacity - all_items[i].get_weight()) / granularity) - 1]  # 直接查阅已算完部分，获取其最大价值
                     new_max_value += last_table.value
                     last_lst = last_table.lst
 
                 # 判断是不是更有价值
                 if new_max_value > last_max_value:  # 可以放入更多
-                    last_lst.append(all_things[i].name)  # append方法返回None 不能直接用
+                    last_lst.append(all_items[i])  # append方法返回None 不能直接用
                     plan_table[i][j] = SaveAdapter(new_max_value, last_lst)
                 else:
-                    # plan_table[i][j] = plan_table[i - 1][j]  # 这种写法有问题 相当于浅拷贝了一个SaveAdapter 导致意外的交叉访问
+                    # plan_table[i][j] = plan_table[i - 1][j]  # 这种写法有问题 相当于浅拷贝了一个SaveAdapter 导致意外的交叉访问其lst
                     plan_table[i][j] = plan_table[i - 1][j].copy()
 
-            plan_table[i][j].print(pre="pos: (" + all_things[i].name + ", " + str(j + 1) + "),  ")
-
-    for i, row in enumerate(plan_table):
-        for j, cell in enumerate(plan_table[i]):
-            print(str(cell.value) + " ", end='')
-            if j == len(plan_table[i]) - 1:
-                print()
-
-    return plan_table[len(all_things) - 1][bag_capacity - 1]
+    return plan_table
 
 
 if __name__ == '__main__':
@@ -399,4 +336,26 @@ if __name__ == '__main__':
     # djistra()
     # print(tanxin())
 
-    dynamtic_plan().print()
+    all_things = [
+        Thing("A", 2, 1500),
+        Thing("B", 3, 2000),
+        Thing("C", 4, 3000),
+        Thing("D", 2, 2500),
+        Thing("E", 2, 1000),
+        # Thing("Diamond", 5, 100000000)
+    ]
+    bag_capacity = 6  # 背包最多装多少
+
+    all_places = [
+        Place("west", 0.5, 7),
+        Place("global", 0.5, 6),
+        Place("draw", 1, 9),
+        Place("britain", 2, 9),
+        Place("church", 0.5, 8)
+    ]
+
+    max_days = 2
+    step = 0.5
+
+    dynamic_plan(all_things, bag_capacity)[len(all_things) - 1][bag_capacity - 1].print()
+    # dynamic_plan(all_places, max_days, step)[len(all_places) - 1][int(max_days / step) - 1].print()

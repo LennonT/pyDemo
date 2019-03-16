@@ -322,6 +322,59 @@ def dynamic_plan(all_items, max_capacity, granularity=1):
     return plan_table
 
 
+# # 使用动态规划的方法处理最长公共字串的算法
+def longest_common_substring(string1, string2):
+    plan_table = [[0 for i in range(len(string2))] for j in range(len(string1))]
+
+    max_value = 0
+    max_pos = [0, 0]
+    for i in range(len(string1)):
+        for j in range(len(string2)):
+            if string1[i] == string2[j]:
+                if i > 0 and j > 0:
+                    plan_table[i][j] = plan_table[i - 1][j - 1] + 1   # 相等则左上角元素加1
+                    if (plan_table[i][j]) > max_value:
+                        max_value = plan_table[i][j]
+                        max_pos = [i, j]
+
+    print(max_value, max_pos)
+
+    return string1[(max_pos[0] - max_value + 1):max_pos[0] + 1]
+
+
+# 使用动态规划处理的最长公共子序列算法
+def longest_common_subarray(string1, string2):
+    plan_table = [[0 for i in range(len(string2))] for j in range(len(string1))]
+
+    max_value = 0
+    max_pos = [0, 0]
+    for i in range(len(string1)):
+        for j in range(len(string2)):
+            if string1[i] == string2[j]:
+                if i > 0 and j > 0:
+                    plan_table[i][j] = plan_table[i - 1][j - 1] + 1   # 相等则左上角元素加1
+                    if (plan_table[i][j]) > max_value:
+                        max_value = plan_table[i][j]
+                        max_pos = [i, j]
+                else:
+                    plan_table[i][j] = 1  # 左上角没有元素
+
+            else:
+                # 不等 则取左边和上边两个的较大值
+                up = plan_table[i - 1][j] if i > 0 else 0
+                left = plan_table[i][j - 1] if j > 0 else 0
+                plan_table[i][j] = up if up > left else left
+
+    # 输出整个规划表
+    for i in range(len(plan_table)):
+        for j in range(len(plan_table[0])):
+            print(str(plan_table[i][j]) + " ", end='')
+            if j == len(plan_table[0]) - 1:
+                print()
+
+    return max_value, max_pos
+
+
 if __name__ == '__main__':
     # test()
     # checkDup()
@@ -336,26 +389,38 @@ if __name__ == '__main__':
     # djistra()
     # print(tanxin())
 
-    all_things = [
-        Thing("A", 2, 1500),
-        Thing("B", 3, 2000),
-        Thing("C", 4, 3000),
-        Thing("D", 2, 2500),
-        Thing("E", 2, 1000),
-        # Thing("Diamond", 5, 100000000)
-    ]
-    bag_capacity = 6  # 背包最多装多少
+    # all_things = [
+    #     Thing("A", 2, 1500),
+    #     Thing("B", 3, 2000),
+    #     Thing("C", 4, 3000),
+    #     Thing("D", 2, 2500),
+    #     Thing("E", 2, 1000),
+    #     # Thing("Diamond", 5, 100000000)
+    # ]
+    # bag_capacity = 6  # 背包最多装多少
+    #
+    # dynamic_plan(all_things, bag_capacity)[len(all_things) - 1][bag_capacity - 1].print()
 
-    all_places = [
-        Place("west", 0.5, 7),
-        Place("global", 0.5, 6),
-        Place("draw", 1, 9),
-        Place("britain", 2, 9),
-        Place("church", 0.5, 8)
-    ]
-
-    max_days = 2
-    step = 0.5
-
-    dynamic_plan(all_things, bag_capacity)[len(all_things) - 1][bag_capacity - 1].print()
+    # all_places = [
+    #     Place("west", 0.5, 7),
+    #     Place("global", 0.5, 6),
+    #     Place("draw", 1, 9),
+    #     Place("britain", 2, 9),
+    #     Place("church", 0.5, 8)
+    # ]
+    #
+    # max_days = 2
+    # step = 0.5  # 粒度
     # dynamic_plan(all_places, max_days, step)[len(all_places) - 1][int(max_days / step) - 1].print()
+
+    # all_things_for_camp = [
+    #     Thing("water", 3, 10),
+    #     Thing("book", 1, 3),
+    #     Thing("food", 2, 9),
+    #     Thing("jack", 2, 5),
+    #     Thing("camera", 1, 6)
+    # ]
+    # max_capacity = 6
+    # dynamic_plan(all_things_for_camp, max_capacity)[len(all_things_for_camp) - 1][max_capacity - 1].print()
+
+    print(longest_common_subarray("fosh", "fish"))
